@@ -1,33 +1,20 @@
-#
-# This is the user-interface definition of a Shiny web application. You can
-# run the application by clicking 'Run App' above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
-
-library(shiny)
-
-# Define UI for application that draws a histogram
-fluidPage(
-
-    # Application title
-    titlePanel("Old Faithful Geyser Data"),
-
-    # Sidebar with a slider input for number of bins
-    sidebarLayout(
-        sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
-        ),
-
-        # Show a plot of the generated distribution
-        mainPanel(
-            plotOutput("distPlot")
-        )
+ui <- fluidPage(
+  titlePanel("Collision Types in Maryland from 2015-2023"),
+  sidebarLayout(
+    sidebarPanel(
+      sliderInput("year",
+                  "Select Years:",
+                  min = min(data$Year),
+                  max = max(data$Year),
+                  value = c(min(data$Year), max(data$Year))),  # Ensure the value is within min and max
+      hr(),
+      fluidRow(column(7, verbatimTextOutput("range")))
+      
+    ),
+    
+    mainPanel(
+      plotlyOutput("collision_bargraph")
+      
     )
+  )
 )
