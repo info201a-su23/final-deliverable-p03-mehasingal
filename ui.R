@@ -1,11 +1,10 @@
-library(ggplot2)
 library(shiny)
-library(shinydashboard)
-library(plotly)
-library(shinythemes)
+library(ggplot2)
 library(dplyr)
+library(plotly)
 library(lubridate)
 library(tidyr)
+library(rsconnect)
 
 ui <- fluidPage(
   
@@ -20,6 +19,7 @@ ui <- fluidPage(
     # Introduction tab
     tabPanel("Introduction",
              h1("Project Overview"),
+             # Sunwoo type here
              p("Welcome to our data exploration project."),
              p("We will be analyzing XYZ data to answer questions related to ABC."),
              p("The data was sourced from [Data Source](link_to_data_source).")
@@ -51,30 +51,35 @@ ui <- fluidPage(
              h1("Alcohol-Related Vehicle Crashes Over Time"),
              
              # Sidebar with a select input widget
-             sidebarLayout(
-               sidebarPanel(
-                 selectInput("selected_month", "Select Month:", 
-                             choices = c("All Months", month.name))
-               ),
+             #sidebarLayout(
+               #sidebarPanel(
+                 #selectInput("selected_month", "Select Month:", 
+                             #choices = c("All Months", month.name))
+               #),
                # Main panel with the interactive plot
-               mainPanel(
-                 plotlyOutput("interactive_plot")
-               )
-             )
+              # mainPanel(
+                 #plotlyOutput("interactive_plot")
+               #)
+             #)
     ),
     
     # Vehicle Make and Model tab
     tabPanel("Vehicle Make and Model",
-             h1("Relationship between Top 10 Vehicle Makes and Injury Severity"),
-             mainPanel(
-               plotlyOutput("injury_plot")
-             ),
-             uiOutput("severity_input")
+             sidebarLayout(
+               sidebarPanel(
+                 uiOutput("severity_input")
+               ),
+               mainPanel(
+                 plotlyOutput("injury_plot")
+               )
+             )
     ),
     
-    # Conclusions tab
-    tabPanel("Conclusions",
+    # Conclusion tab
+    tabPanel("Conclusion",
              h1("Project Conclusions"),
+             
+             # Sunwoo type here
              p("In summary, our analysis revealed the following major takeaways:"),
              # Add text and other elements to present your conclusions
              # ...

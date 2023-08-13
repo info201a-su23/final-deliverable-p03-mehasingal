@@ -4,6 +4,7 @@ library(dplyr)
 library(plotly)
 library(lubridate)
 library(tidyr)
+library(rsconnect)
 
 data <- read.csv("maryland_crash_report.csv")
 
@@ -31,9 +32,7 @@ server <- function(input, output) {
     
     # Get the selected number of top collision types
     selected_num_top <- input$numTop
-    
-    print(input$numTop)
-    
+  
     if (selected_num_top == "All") {
       sorted_collision_occurance_df <- collision_occurance_df
       plot_title <- "All Collision Types"
@@ -58,40 +57,44 @@ server <- function(input, output) {
   
   # Meha's graph code
   
-  output$interactive_plot <- renderPlotly({
+  #output$interactive_plot <- renderPlotly({
     
-    data$Crash.Date.Time <- as.Date(data$Crash.Date.Time, format = "%m/%d/%Y")
+    #data$Crash.Date.Time <- as.Date(data$Crash.Date.Time, format = "%m/%d/%Y")
     
-    filtered <- data %>%
-      select(Crash.Date.Time, Driver.Substance.Abuse)
-  
+    #filtered <- data %>%
+      #select(Crash.Date.Time, Driver.Substance.Abuse)
+    
     # filter data for only alcohol contributed crashes
-    alcohol_contributed_data <- filtered %>%
-      filter(Driver.Substance.Abuse == "ALCOHOL CONTRIBUTED")
+    #alcohol_contributed_data <- filtered %>%
+      #filter(Driver.Substance.Abuse == "ALCOHOL CONTRIBUTED")
     
     # summarize the data by date to get counts
-    count_data <- alcohol_contributed_data %>%
-      group_by(Crash.Date.Time) %>%
-      summarise(Count = n())
+    #count_data <- alcohol_contributed_data %>%
+      #group_by(Crash.Date.Time) %>%
+      #summarise(Count = n())
     
-    # Filter data based on the selected month or all months
-    selected_month <- input$selected_month
-    if (selected_month == "All Months") {
-      plot_title <- "Number of Alcohol-Related Vehicle Crashes Over Time"
-    } else {
-      count_data <- count_data %>%
-        filter(format(Crash.Date.Time, "%B") == selected_month)  # Use the original column name
-      plot_title <- paste("Number of Alcohol-Related Vehicle Crashes in", selected_month)
-    }
+    # Check if input$selected_month exists and is not NULL
+    #if (!is.null(input$selected_month) && input$selected_month != "All Months") {
+      #selected_month <- input$selected_month
+      
+      #count_data <- count_data %>%
+        #filter(format(Crash.Date.Time, "%B") == selected_month)  # Use the original column name
+   # }
+    
+    # Set the plot title
+   # plot_title <- ifelse(is.null(input$selected_month) || input$selected_month == "All Months",
+                         #"Number of Alcohol-Related Vehicle Crashes Over Time",
+                         #paste("Number of Alcohol-Related Vehicle Crashes in", input$selected_month))
     
     # Create the interactive bar plot
-    alcohol_related_accidents_overtime <- ggplot(count_data, aes(x = Crash.Date.Time, y = Count)) +
-      geom_bar(stat = "identity", fill = "blue", color = "blue") +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-      labs(title = plot_title, x = "Date", y = "Number of Crashes")
+    #alcohol_related_accidents_overtime <- ggplot(count_data, aes(x = Crash.Date.Time, y = Count)) +
+      #geom_bar(stat = "identity", fill = "blue", color = "blue") +
+      #theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+      #labs(title = plot_title, x = "Date", y = "Number of Crashes")
     
-    ggplotly(alcohol_related_accidents_overtime)
-  })
+    #ggplotly(alcohol_related_accidents_overtime)
+  #})
+  
   
   
   # Chufeng's graph code 
@@ -108,7 +111,7 @@ server <- function(input, output) {
     
     # Use selectInput widget to allow users to choose Injury Severity
     selected_severity <- input$severity_choice
-    
+
     summary_data <- filtered_data %>%
       group_by(Vehicle.Make, Injury.Severity) %>%
       summarise(Count = n()) %>%
