@@ -38,8 +38,30 @@ server <- function(input, output) {
   
   # Chufeng's graph code
   
+    top_makes <- data %>%
+    count(Vehicle.Make) %>%
+    arrange(desc(n)) %>%
+    head(10) %>%
+    pull(Vehicle.Make)
   
+  filtered_data <- data %>%
+    filter(Vehicle.Make %in% top_makes)
   
+  summary_data <- filtered_data %>%
+    group_by(Vehicle.Make, Injury.Severity) %>%
+    summarise(Count = n()) %>%
+    ungroup()
+  
+  summary_data$Injury.Severity <- as.factor(summary_data$Injury.Severity)
+  
+  vehicle_injury_scatterplot <- ggplot(filtered_data, aes(x = Vehicle.Make, y = Injury.Severity)) +
+    geom_jitter(aes(color = Vehicle.Make), alpha = 0.4, width = 0.1) +
+    labs(title = "Relationship between Vehicle Make and Injury Severity",
+         x = "Top 10 Vehicle Make",
+         y = "Injury Severity") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
+  print(vehicle_injury_scatterplot)
   
 }
 =======
