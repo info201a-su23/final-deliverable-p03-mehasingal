@@ -34,9 +34,10 @@ ui <- fluidPage(
              # ...
     ),
     tabPanel("Question 3",
-             h1("Question 3: ..."),
-             # Add widgets and reactive charts specific to Question 3
-             # ...
+             h1("Relationship between Top 10 Vehicle Makes and Injury Severity"),
+             mainPanel(
+               plotlyOutput("")
+             )
     ),
     tabPanel("Conclusions",
              h1("Project Conclusions"),
