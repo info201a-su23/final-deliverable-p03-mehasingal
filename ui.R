@@ -2,16 +2,14 @@ library(ggplot2)
 library(shiny)
 library(shinydashboard)
 library(plotly)
+library(shinythemes)
 library(dplyr)
 library(lubridate)
 library(tidyr)
 
 ui <- fluidPage(
   
-  tags$head(
-    tags$link(rel = "stylesheet", href = "styles.css")
-    
-  ),
+  theme = shinytheme("cosmo"),
   
   h1("Analysis of Vehicle Collisions in Maryland"),
   
