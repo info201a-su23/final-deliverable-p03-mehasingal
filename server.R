@@ -1,28 +1,26 @@
-
-# install.packages("plotly")
+library(shiny)
+library(ggplot2)
 library(dplyr)
 library(plotly)
+library(lubridate)
+library(tidyr)
 
 data <- read.csv("maryland_crash_report.csv")
+data <- data %>%
+  mutate(Year = year(as.POSIXct(Crash.Date.Time, format = "%m/%d/%Y %I:%M:%S %p")))
 
 # Define server logic
 server <- function(input, output) {
   
-  # Sunwoo's code
-  
-  
-  
-  
-  
-  
   # Jessica's graph code
-  filtered_data <- reactive({
-    data %>%
-      filter(Year >= input$yearRange[1], Year <= input$yearRange[2])
-  })
+  #filtered_data <- reactive({
+    #data %>%
+      #filter(Year >= input$yearRange[1], Year <= input$yearRange[2])
+  #})
   
   output$collision_bargraph <- renderPlotly({
-    collision_occurance <- table(filtered_data()$Collision.Type)
+    
+    collision_occurance <- table(data$Collision.Type)
     collision_occurance_df <- as.data.frame(collision_occurance)
     colnames(collision_occurance_df) <- c("Collision Type", "Count")
     
@@ -34,14 +32,9 @@ server <- function(input, output) {
     ggplotly(collision_graph)
   })
   
-  output$range <- renderPrint({
-    input$yearRange
-  })
-  
   # Meha's graph code
-  
   output$interactive_plot <- renderPlotly({
-    filtered_crashes <- filtered_data() %>%
+    filtered_crashes <- data %>%
       filter(Driver.Substance.Abuse == "ALCOHOL CONTRIBUTED")
     
     count_data <- filtered_crashes %>%
@@ -57,39 +50,31 @@ server <- function(input, output) {
     ggplotly(crash_graph)
   })
   
-  output$range <- renderPrint({
-    input$yearRange
-  })
-  
-  
-  # Chufeng's graph code
-  
+  # Chufeng's graph code 
   output$injury_plot <- renderPlotly({
     top_makes <- data %>%
-    count(Vehicle.Make) %>%
-    arrange(desc(n)) %>%
-    head(10) %>%
-    pull(Vehicle.Make)
-  
+      count(Vehicle.Make) %>%
+      arrange(desc(n)) %>%
+      head(10) %>%
+      pull(Vehicle.Make)
+    
     filtered_data <- data %>%
       filter(Vehicle.Make %in% top_makes)
-  
+    
     summary_data <- filtered_data %>%
       group_by(Vehicle.Make, Injury.Severity) %>%
       summarise(Count = n()) %>%
       ungroup()
-  
+    
     summary_data$Injury.Severity <- as.factor(summary_data$Injury.Severity)
-  
-    vehicle_injury_scatterplot <- ggplot(filtered_data, aes(x = Vehicle.Make, y = Injury.Severity)) +
-      geom_jitter(aes(color = Vehicle.Make), alpha = 0.4, width = 0.1) +
+    
+    vehicle_injury_scatterplot <- ggplot(summary_data, aes(x = Vehicle.Make, y = Count, color = Injury.Severity)) +
+      geom_point() +
       labs(title = "Relationship between Vehicle Make and Injury Severity",
-            x = "Top 10 Vehicle Make",
-            y = "Injury Severity") +
+           x = "Top 10 Vehicle Make",
+           y = "Count") +
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
-  
-    print(vehicle_injury_scatterplot)
+    
+    ggplotly(vehicle_injury_scatterplot)
   })
 }
-
-
