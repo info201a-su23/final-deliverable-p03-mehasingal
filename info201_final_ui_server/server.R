@@ -54,15 +54,16 @@ server <- function(input, output) {
   
   summary_data$Injury.Severity <- as.factor(summary_data$Injury.Severity)
   
-  vehicle_injury_scatterplot <- ggplot(filtered_data, aes(x = Vehicle.Make, y = Injury.Severity)) +
-    geom_jitter(aes(color = Vehicle.Make), alpha = 0.4, width = 0.1) +
-    labs(title = "Relationship between Vehicle Make and Injury Severity",
-         x = "Top 10 Vehicle Make",
-         y = "Injury Severity") +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  output$injury_plot <- renderPlotly({
+    vehicle_injury_scatterplot <- ggplot(filtered_data, aes(x = Vehicle.Make, y = Injury.Severity)) +
+      geom_jitter(aes(color = Vehicle.Make), alpha = 0.4, width = 0.1) +
+      labs(title = "Relationship between Vehicle Make and Injury Severity",
+           x = "Top 10 Vehicle Make",
+           y = "Injury Severity") +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
   
-  print(vehicle_injury_scatterplot)
-  
+    print(vehicle_injury_scatterplot)
+  })
 }
 =======
 server <- function(input, output) {
