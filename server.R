@@ -33,21 +33,27 @@ server <- function(input, output) {
   })
   
   # Meha's graph code
+  
   output$interactive_plot <- renderPlotly({
-    filtered_crashes <- data %>%
-      filter(Driver.Substance.Abuse == "ALCOHOL CONTRIBUTED")
+    # Filter data based on the selected month or all months
+    selected_month <- input$selected_month
+    if (selected_month == "All Months") {
+      filtered_data <- count_data
+      plot_title <- "Number of Alcohol-Related Vehicle Crashes Over Time"
+    } else {
+      filtered_data <- count_data %>%
+        filter(format(Crash.Date.Time, "%B") == selected_month)
+      plot_title <- paste("Number of Alcohol-Related Vehicle Crashes in", selected_month)
+    }
     
-    count_data <- filtered_crashes %>%
-      group_by(Year) %>%
-      summarise(Count = n())
-    
-    crash_graph <- ggplot(count_data, aes(x = Year, y = Count)) +
+    # Create the interactive bar plot
+    alcohol_related_accidents_overtime <- ggplot(filtered_data, aes(x = Crash.Date.Time, y = Count)) +
       geom_bar(stat = "identity", fill = "blue", color = "blue") +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-      labs(title = "Number of Alcohol-Related Vehicle Crashes Over Time in Maryland",
-           x = "Year", y = "Number of Crashes")
+      geom_vline(xintercept = covid_start, linetype = "dashed", color = "red") +
+      labs(title = plot_title, x = "Date", y = "Number of Crashes")
     
-    ggplotly(crash_graph)
+    ggplotly(alcohol_related_accidents_overtime)
   })
   
   # Chufeng's graph code 

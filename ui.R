@@ -44,21 +44,20 @@ ui <- fluidPage(
     ),
     tabPanel("Question 2",
              h1("Alcohol-Related Vehicle Crashes Over Time"),
-             #sidebarLayout(
-               #sidebarPanel(
-                 #sliderInput("yearRange",
-                             #"Select Years:",
-                             #min = min(data$Year),
-                             #max = max(data$Year),
-                             #value = c(2015, 2020),
-                 #hr(),
-                 #fluidRow(column(7, verbatimTextOutput("range")))
-              #),
-              mainPanel(
-                plotlyOutput("interactive_plot")
-              )
-             #)
-    #),
+             
+             # Sidebar with a select input widget
+             sidebarLayout(
+               sidebarPanel(
+                 selectInput("selected_month", "Select Month:", 
+                             choices = c("All Months", month.name)),
+                 # Add more widgets as needed
+               ),
+               
+               # Main panel with the interactive plot
+               mainPanel(
+                 plotlyOutput("interactive_plot")
+               )
+             )
     ),
     tabPanel("Question 3",
              h1("Relationship between Top 10 Vehicle Makes and Injury Severity"),
