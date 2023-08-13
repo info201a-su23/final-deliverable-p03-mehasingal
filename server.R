@@ -7,32 +7,54 @@ library(tidyr)
 
 data <- read.csv("maryland_crash_report.csv")
 
+data <- data %>%
+  mutate(Year = year(as.POSIXct(Crash.Date.Time, format = "%m/%d/%Y %I:%M:%S %p")))
+
 # Define server logic
 server <- function(input, output) {
   
   # Jessica's graph code
-  #filtered_data <- reactive({
-    #data %>%
-      #filter(Year >= input$yearRange[1], Year <= input$yearRange[2])
-  #})
+  
+  filtered_data <- reactive({
+    data %>%
+      filter(Year >= input$yearRange[1], Year <= input$yearRange[2])
+  })
   
   output$collision_bargraph <- renderPlotly({
+    # Use the filtered_data reactive expression to get the filtered data
+    filtered_crashes <- filtered_data()
     
-    data <- data %>%
-      mutate(Year = year(as.POSIXct(Crash.Date.Time, format = "%m/%d/%Y %I:%M:%S %p")))
-    
-    
-    collision_occurance <- table(data$Collision.Type)
+    # Calculate collision occurrence based on the filtered data
+    collision_occurance <- table(filtered_crashes$Collision.Type)
     collision_occurance_df <- as.data.frame(collision_occurance)
     colnames(collision_occurance_df) <- c("Collision Type", "Count")
     
-    collision_graph <- ggplot(collision_occurance_df, aes(x = `Collision Type`, y = Count)) +
+    # Get the selected number of top collision types
+    selected_num_top <- input$numTop
+    
+    print(input$numTop)
+    
+    if (selected_num_top == "All") {
+      sorted_collision_occurance_df <- collision_occurance_df
+      plot_title <- "All Collision Types"
+    } else {
+      # Sort the collision types by count and select the top N
+      sorted_collision_occurance_df <- collision_occurance_df %>%
+        arrange(desc(Count)) %>%
+        head(as.numeric(selected_num_top))
+      plot_title <- paste("Top", selected_num_top, "Occurrences of Collision Types")
+    }
+    
+    # Create the collision graph using ggplot2
+    collision_graph <- ggplot(sorted_collision_occurance_df, aes(x = reorder(`Collision Type`, Count), y = Count)) +
       geom_bar(stat = "identity", fill = "purple") +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-      labs(title = "Total Occurrence of Collision Types", x = "Collision Type", y = "Count")
+      labs(title = plot_title, x = "Collision Type", y = "Count")
     
+    # Convert ggplot to Plotly
     ggplotly(collision_graph)
   })
+  
   
   # Meha's graph code
   
@@ -73,6 +95,7 @@ server <- function(input, output) {
   
   
   # Chufeng's graph code 
+  
   output$injury_plot <- renderPlotly({
     top_makes <- data %>%
       count(Vehicle.Make) %>%
