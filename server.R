@@ -1,0 +1,96 @@
+library(shiny)
+library(ggplot2)
+library(dplyr)
+library(plotly)
+library(lubridate)
+library(tidyr)
+
+
+
+data <- read.csv("maryland_crash_report.csv")
+data <- data %>%
+  mutate(Year = year(as.POSIXct(Crash.Date.Time, format = "%m/%d/%Y %I:%M:%S %p")))
+
+
+
+# Define server logic
+server <- function(input, output) {
+  
+  options(shiny.debug = TRUE) 
+
+  
+  # Sunwoo's code
+  
+  
+
+  # Jessica's graph code
+  filtered_data <- reactive({
+    data %>%
+      filter(Year >= input$yearRange[1], Year <= input$yearRange[2])
+  })
+  
+  output$collision_bargraph <- renderPlotly({
+    collision_occurance <- table(filtered_data()$Collision.Type)
+    collision_occurance_df <- as.data.frame(collision_occurance)
+    colnames(collision_occurance_df) <- c("Collision Type", "Count")
+    
+    collision_graph <- ggplot(collision_occurance_df, aes(x = `Collision Type`, y = Count)) +
+      geom_bar(stat = "identity", fill = "purple") +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+      labs(title = "Total Occurrence of Collision Types", x = "Collision Type", y = "Count")
+    
+    ggplotly(collision_graph)
+  })
+  
+  output$range <- renderPrint({
+    input$yearRange
+  })
+  
+  # Meha's graph code
+  
+  filtered_data <- reactive({
+    data %>%
+      filter(Year >= input$yearRange[1], Year <= input$yearRange[2])
+  })
+  
+  output$collision_bargraph <- renderPlotly({
+    collision_occurance <- table(filtered_data()$Collision.Type)
+    collision_occurance_df <- as.data.frame(collision_occurance)
+    colnames(collision_occurance_df) <- c("Collision Type", "Count")
+    
+    collision_graph <- ggplot(collision_occurance_df, aes(x = `Collision Type`, y = Count)) +
+      geom_bar(stat = "identity", fill = "purple") +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+      labs(title = "Total Occurrence of Collision Types", x = "Collision Type", y = "Count")
+    
+    ggplotly(collision_graph)
+  })
+  
+  output$interactive_plot <- renderPlotly({
+    filtered_crashes <- filtered_data() %>%
+      filter(Driver.Substance.Abuse == "ALCOHOL CONTRIBUTED")
+    
+    count_data <- filtered_crashes %>%
+      group_by(Year) %>%
+      summarise(Count = n())
+    
+    crash_graph <- ggplot(count_data, aes(x = Year, y = Count)) +
+      geom_bar(stat = "identity", fill = "blue", color = "blue") +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+      labs(title = "Number of Alcohol-Related Vehicle Crashes Over Time in Maryland",
+           x = "Year", y = "Number of Crashes")
+    
+    ggplotly(crash_graph)
+  })
+  
+  output$range <- renderPrint({
+    input$yearRange
+  })
+  
+  
+  
+  # Chufeng's graph code
+  
+  
+
+}
