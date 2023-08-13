@@ -1,8 +1,10 @@
-
+library(ggplot2)
 library(shiny)
 library(shinydashboard)
 library(plotly)
 library(dplyr)
+library(lubridate)
+library(tidyr)
 
 ui <- fluidPage(
   
@@ -23,15 +25,40 @@ ui <- fluidPage(
              p("The data was sourced from [Data Source](link_to_data_source)."),
     ),
     tabPanel("Question 1",
-             h1("Collision Types in Maryland from 2015-2023"),
-             mainPanel(
-               plotlyOutput("collision_plot")
-             )
+             titlePanel("Vehicle Collision Types from 2015-2023"),
+             sidebarLayout(
+               sidebarPanel(
+                 sliderInput("yearRange",
+                             "Select Years:",
+                             min = min(data$Year),
+                             max = max(data$Year),
+                             value = c(2015, 2020),
+                             hr(),
+                             fluidRow(column(7, verbatimTextOutput("range")))
+                 ),
+                 mainPanel(
+                   plotlyOutput("collision_graph")
+                 )
+               )
+             ),
     ),
     tabPanel("Question 2",
-             h1("Question 2: ..."),
-             # Add widgets and reactive charts specific to Question 2
-             # ...
+             titlePanel("Alcohol-Related Vehicle Crashes Over Time"),
+             sidebarLayout(
+               sidebarPanel(
+                 sliderInput("yearRange",
+                             "Select Years:",
+                             min = min(data$Year),
+                             max = max(data$Year),
+                             value = c(2015, 2020),
+                 hr(),
+                 fluidRow(column(7, verbatimTextOutput("range")))
+               ),
+               mainPanel(
+                 plotlyOutput("interactive_plot")
+               )
+             )
+    ),
     ),
     tabPanel("Question 3",
              h1("Relationship between Top 10 Vehicle Makes and Injury Severity"),
