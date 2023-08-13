@@ -6,8 +6,6 @@ library(lubridate)
 library(tidyr)
 
 data <- read.csv("maryland_crash_report.csv")
-data <- data %>%
-  mutate(Year = year(as.POSIXct(Crash.Date.Time, format = "%m/%d/%Y %I:%M:%S %p")))
 
 # Define server logic
 server <- function(input, output) {
@@ -19,6 +17,10 @@ server <- function(input, output) {
   #})
   
   output$collision_bargraph <- renderPlotly({
+    
+    data <- data %>%
+      mutate(Year = year(as.POSIXct(Crash.Date.Time, format = "%m/%d/%Y %I:%M:%S %p")))
+    
     
     collision_occurance <- table(data$Collision.Type)
     collision_occurance_df <- as.data.frame(collision_occurance)
@@ -35,26 +37,40 @@ server <- function(input, output) {
   # Meha's graph code
   
   output$interactive_plot <- renderPlotly({
+    
+    data$Crash.Date.Time <- as.Date(data$Crash.Date.Time, format = "%m/%d/%Y")
+    
+    filtered <- data %>%
+      select(Crash.Date.Time, Driver.Substance.Abuse)
+  
+    # filter data for only alcohol contributed crashes
+    alcohol_contributed_data <- filtered %>%
+      filter(Driver.Substance.Abuse == "ALCOHOL CONTRIBUTED")
+    
+    # summarize the data by date to get counts
+    count_data <- alcohol_contributed_data %>%
+      group_by(Crash.Date.Time) %>%
+      summarise(Count = n())
+    
     # Filter data based on the selected month or all months
     selected_month <- input$selected_month
     if (selected_month == "All Months") {
-      filtered_data <- count_data
       plot_title <- "Number of Alcohol-Related Vehicle Crashes Over Time"
     } else {
-      filtered_data <- count_data %>%
-        filter(format(Crash.Date.Time, "%B") == selected_month)
+      count_data <- count_data %>%
+        filter(format(Crash.Date.Time, "%B") == selected_month)  # Use the original column name
       plot_title <- paste("Number of Alcohol-Related Vehicle Crashes in", selected_month)
     }
     
     # Create the interactive bar plot
-    alcohol_related_accidents_overtime <- ggplot(filtered_data, aes(x = Crash.Date.Time, y = Count)) +
+    alcohol_related_accidents_overtime <- ggplot(count_data, aes(x = Crash.Date.Time, y = Count)) +
       geom_bar(stat = "identity", fill = "blue", color = "blue") +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-      geom_vline(xintercept = covid_start, linetype = "dashed", color = "red") +
       labs(title = plot_title, x = "Date", y = "Number of Crashes")
     
     ggplotly(alcohol_related_accidents_overtime)
   })
+  
   
   # Chufeng's graph code 
   output$injury_plot <- renderPlotly({
