@@ -61,10 +61,14 @@ server <- function(input, output) {
     filtered_data <- data %>%
       filter(Vehicle.Make %in% top_makes)
     
+    # Use selectInput widget to allow users to choose Injury Severity
+    selected_severity <- input$severity_choice
+    
     summary_data <- filtered_data %>%
       group_by(Vehicle.Make, Injury.Severity) %>%
       summarise(Count = n()) %>%
-      ungroup()
+      ungroup() %>%
+      filter(Injury.Severity == selected_severity)
     
     summary_data$Injury.Severity <- as.factor(summary_data$Injury.Severity)
     
@@ -77,4 +81,11 @@ server <- function(input, output) {
     
     ggplotly(vehicle_injury_scatterplot)
   })
+  
+  # Define a selectInput widget for choosing Injury Severity
+  output$severity_input <- renderUI({
+    severity_choices <- unique(data$Injury.Severity)
+    selectInput("severity_choice", "Select Injury Severity", severity_choices)
+  })
+  
 }

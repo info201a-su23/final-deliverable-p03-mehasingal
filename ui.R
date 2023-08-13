@@ -64,7 +64,8 @@ ui <- fluidPage(
              h1("Relationship between Top 10 Vehicle Makes and Injury Severity"),
              mainPanel(
                plotlyOutput("injury_plot")
-             )
+             ),
+             uiOutput("severity_input")
     ),
     tabPanel("Conclusions",
              h1("Project Conclusions"),
