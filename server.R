@@ -5,6 +5,8 @@ library(plotly)
 library(lubridate)
 library(tidyr)
 library(rsconnect)
+library(shinythemes)
+
 
 data <- read.csv("maryland_crash_report.csv")
 
@@ -57,49 +59,55 @@ server <- function(input, output) {
   
   # Meha's graph code
   
-  #output$interactive_plot <- renderPlotly({
+  output$interactive_plot <- renderPlotly({
     
-    #data$Crash.Date.Time <- as.Date(data$Crash.Date.Time, format = "%m/%d/%Y")
+    data$Crash.Date.Time <- as.Date(data$Crash.Date.Time, format = "%m/%d/%Y")
     
-    #filtered <- data %>%
-      #select(Crash.Date.Time, Driver.Substance.Abuse)
+    filtered <- data %>%
+      select(Crash.Date.Time, Driver.Substance.Abuse)
     
     # filter data for only alcohol contributed crashes
-    #alcohol_contributed_data <- filtered %>%
-      #filter(Driver.Substance.Abuse == "ALCOHOL CONTRIBUTED")
+    alcohol_contributed_data <- filtered %>%
+      filter(Driver.Substance.Abuse == "ALCOHOL CONTRIBUTED")
     
     # summarize the data by date to get counts
-    #count_data <- alcohol_contributed_data %>%
-      #group_by(Crash.Date.Time) %>%
-      #summarise(Count = n())
+    count_data <- alcohol_contributed_data %>%
+      group_by(Crash.Date.Time) %>%
+      summarise(Count = n())
     
     # Check if input$selected_month exists and is not NULL
-    #if (!is.null(input$selected_month) && input$selected_month != "All Months") {
-      #selected_month <- input$selected_month
+    if (!is.null(input$selected_month) && input$selected_month != "All Months") {
+      selected_month <- input$selected_month
       
-      #count_data <- count_data %>%
-        #filter(format(Crash.Date.Time, "%B") == selected_month)  # Use the original column name
-   # }
+      count_data <- count_data %>%
+        filter(format(Crash.Date.Time, "%B") == selected_month)  # Use the original column name
+   }
     
     # Set the plot title
-   # plot_title <- ifelse(is.null(input$selected_month) || input$selected_month == "All Months",
-                         #"Number of Alcohol-Related Vehicle Crashes Over Time",
-                         #paste("Number of Alcohol-Related Vehicle Crashes in", input$selected_month))
+   plot_title <- ifelse(is.null(input$selected_month) || input$selected_month == "All Months",
+                         "Number of Alcohol-Related Vehicle Crashes Over Time",
+                         paste("Number of Alcohol-Related Vehicle Crashes in", input$selected_month))
     
     # Create the interactive bar plot
-    #alcohol_related_accidents_overtime <- ggplot(count_data, aes(x = Crash.Date.Time, y = Count)) +
-      #geom_bar(stat = "identity", fill = "blue", color = "blue") +
-      #theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-      #labs(title = plot_title, x = "Date", y = "Number of Crashes")
+    alcohol_related_accidents_overtime <- ggplot(count_data, aes(x = Crash.Date.Time, y = Count)) +
+      geom_bar(stat = "identity", fill = "blue", color = "blue") +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+      labs(title = plot_title, x = "Date", y = "Number of Crashes")
+   
+   #alcohol_related_accidents_overtime <- ggplot(count_data, aes(x = Crash.Date.Time, y = Count)) +
+    # geom_line(color = "blue") +
+     #theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    # labs(title = plot_title, x = "Date", y = "Number of Crashes")
     
-    #ggplotly(alcohol_related_accidents_overtime)
-  #})
+    ggplotly(alcohol_related_accidents_overtime)
+  })
   
   
   
   # Chufeng's graph code 
   
   output$injury_plot <- renderPlotly({
+    
     top_makes <- data %>%
       count(Vehicle.Make) %>%
       arrange(desc(n)) %>%
@@ -115,7 +123,7 @@ server <- function(input, output) {
     summary_data <- filtered_data %>%
       group_by(Vehicle.Make, Injury.Severity) %>%
       summarise(Count = n()) %>%
-      ungroup() %>%
+      ungroup() %>% 
       filter(Injury.Severity == selected_severity)
     
     summary_data$Injury.Severity <- as.factor(summary_data$Injury.Severity)
@@ -127,8 +135,11 @@ server <- function(input, output) {
            y = "Count") +
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
     
+    
+    # Convert ggplot to Plotly
     ggplotly(vehicle_injury_scatterplot)
   })
+  
   
   # Define a selectInput widget for choosing Injury Severity
   output$severity_input <- renderUI({

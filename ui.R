@@ -5,6 +5,14 @@ library(plotly)
 library(lubridate)
 library(tidyr)
 library(rsconnect)
+library(shinythemes)
+
+
+
+data <- read.csv("maryland_crash_report.csv")
+
+data <- data %>%
+  mutate(Year = year(as.POSIXct(Crash.Date.Time, format = "%m/%d/%Y %I:%M:%S %p")))
 
 ui <- fluidPage(
   
@@ -32,8 +40,8 @@ ui <- fluidPage(
              # Sidebar with sliding range and top N selection widgets
              sidebarLayout(
                sidebarPanel(
-                 sliderInput("yearRange",
-                              "Select Years:",
+                sliderInput("yearRange",
+                             "Select Years:",
                               min = min(data$Year),
                               max = max(data$Year),
                               value = c(2015, 2020),
@@ -50,23 +58,23 @@ ui <- fluidPage(
     tabPanel("Alcohol-Related Crashes",
              h1("Alcohol-Related Vehicle Crashes Over Time"),
              
-             # Sidebar with a select input widget
-             #sidebarLayout(
-               #sidebarPanel(
-                 #selectInput("selected_month", "Select Month:", 
-                             #choices = c("All Months", month.name))
-               #),
+              #Sidebar with a select input widget
+             sidebarLayout(
+               sidebarPanel(
+                 selectInput("selected_month", "Select Month:", 
+                             choices = c("All Months", month.name))
+               ),
                # Main panel with the interactive plot
-              # mainPanel(
-                 #plotlyOutput("interactive_plot")
-               #)
-             #)
+               mainPanel(
+                 plotlyOutput("interactive_plot")
+               )
+             )
     ),
     
     # Vehicle Make and Model tab
     tabPanel("Vehicle Make and Model",
              sidebarLayout(
-               sidebarPanel(
+              sidebarPanel(
                  uiOutput("severity_input")
                ),
                mainPanel(
