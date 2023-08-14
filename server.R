@@ -16,6 +16,60 @@ data <- data %>%
 # Define server logic
 server <- function(input, output) {
   
+  # Summary Table Code
+  
+  # Calculate the maximum counts for each variable
+  max_route_crash <- data %>% 
+    group_by(Road.Name, Vehicle.Continuing.Dir) %>%
+    summarise(report_num = n()) %>%
+    arrange(desc(report_num)) %>%
+    head(1)
+  
+  max_weather_crash <- data %>% 
+    group_by(Weather, Surface.Condition) %>%
+    summarise(report_num = n()) %>%
+    arrange(desc(report_num)) %>%
+    head(1)
+  
+  max_model_crash <- data %>% 
+    filter(Injury.Severity == "FATAL INJURY") %>%
+    group_by(Vehicle.Model, Vehicle.Make) %>%
+    summarise(report_num = n()) %>%
+    arrange(desc(report_num)) %>%
+    head(1)
+  
+  max_collision_crash <- data %>% 
+    filter(Light == "DAYLIGHT") %>%
+    group_by(Collision.Type) %>%
+    summarise(report_num = n()) %>%
+    arrange(desc(report_num)) %>%
+    head(1)
+  
+  max_dmg_crash <- data %>% 
+    filter(Vehicle.Damage.Extent == "DESTROYED") %>%
+    group_by(Vehicle.Body.Type) %>%
+    summarise(report_num = n()) %>%
+    arrange(desc(report_num)) %>%
+    head(1)
+  
+  # Create a summary table containing the questions and the corresponding non-numeric values with maximum counts
+  summary_table_data <- data.frame(
+    Question = c("Road Route", "Weather and Road Surface", "Vehicle Model and Make",
+                 "Most Often Collisions during Daylight", "Vehicle Body Type with Most Damage"),
+    Most_Common_Characteristics = c(
+      paste(max_route_crash$Road.Name, " - ", max_route_crash$Vehicle.Continuing.Dir),
+      paste(max_weather_crash$Weather, " - ", max_weather_crash$Surface.Condition),
+      paste(max_model_crash$Vehicle.Model, " - ", max_model_crash$Vehicle.Make),
+      max_collision_crash$Collision.Type,
+      max_dmg_crash$Vehicle.Body.Type
+    )
+  )
+  
+  # Render the summary table in the UI
+  output$summary_table <- renderTable({
+    summary_table_data
+  })
+  
   # Jessica's graph code
   
   filtered_data <- reactive({
@@ -58,52 +112,61 @@ server <- function(input, output) {
   
   
   # Meha's graph code
+    
+  # Define the substance abuse types of interest
+  substance_types <- c("All", "ALCOHOL PRESENT", "ALCOHOL CONTRIBUTED",
+                       "ILLEGAL DRUG CONTRIBUTED", "ILLEGAL DRUG PRESENT",
+                       "COMBINATION CONTRIBUTED", "MEDICATION CONTRIBUTED",
+                       "COMBINED SUBSTANCE PRESENT")
   
-  output$interactive_plot <- renderPlotly({
+  output$substance_plot <- renderPlotly({
+    # Convert the "Crash.Date.Time" column to a proper datetime format
+    data$Crash.Date.Time <- as.POSIXct(data$Crash.Date.Time, format = "%m/%d/%Y %I:%M:%S %p")
     
-    data$Crash.Date.Time <- as.Date(data$Crash.Date.Time, format = "%m/%d/%Y")
+    # Filter data based on selected substance type
+    selected_substance <- input$substance
     
-    filtered <- data %>%
-      select(Crash.Date.Time, Driver.Substance.Abuse)
-    
-    # filter data for only alcohol contributed crashes
-    alcohol_contributed_data <- filtered %>%
-      filter(Driver.Substance.Abuse == "ALCOHOL CONTRIBUTED")
-    
-    # summarize the data by date to get counts
-    count_data <- alcohol_contributed_data %>%
-      group_by(Crash.Date.Time) %>%
-      summarise(Count = n())
-    
-    # Check if input$selected_month exists and is not NULL
-    if (!is.null(input$selected_month) && input$selected_month != "All Months") {
-      selected_month <- input$selected_month
+    if (selected_substance == "All") {
+      # Create a placeholder data frame for "All" option
+      substance_data <- data %>%
+        mutate(Year = format(Crash.Date.Time, "%Y")) %>%
+        group_by(Year) %>%
+        summarise(Count = n()) %>%
+        mutate(Percentage = (Count / sum(Count)) * 100)
       
-      count_data <- count_data %>%
-        filter(format(Crash.Date.Time, "%B") == selected_month)  # Use the original column name
-   }
+      graph_title <- "Percentage of Collisions for All Substance Types Over Time"
+    } else {
+      # Filter data for the selected substance type
+      substance_data <- data %>%
+        filter(Driver.Substance.Abuse == selected_substance) %>%
+        mutate(Year = format(Crash.Date.Time, "%Y")) %>%
+        group_by(Year) %>%
+        summarise(Count = n()) %>%
+        mutate(Percentage = (Count / sum(Count)) * 100)
+      
+      graph_title <- paste("Percentage of Collisions for", selected_substance, "Over Time")
+    }
     
-    # Set the plot title
-   plot_title <- ifelse(is.null(input$selected_month) || input$selected_month == "All Months",
-                         "Number of Alcohol-Related Vehicle Crashes Over Time",
-                         paste("Number of Alcohol-Related Vehicle Crashes in", input$selected_month))
+    # Creating the line graph
+    substance_graph <- ggplot(substance_data, aes(x = Year, y = Percentage)) +
+      geom_point(color = "blue") +
+      geom_segment(aes(xend = lead(Year), yend = lead(Percentage)),
+                   color = "blue", linewidth = 1) +
+      labs(title = graph_title,
+           x = "Year",
+           y = "Percentage (%)") +
+      theme_minimal()
     
-    # Create the interactive bar plot
-    alcohol_related_accidents_overtime <- ggplot(count_data, aes(x = Crash.Date.Time, y = Count)) +
-      geom_bar(stat = "identity", fill = "blue", color = "blue") +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-      labs(title = plot_title, x = "Date", y = "Number of Crashes")
-   
-   #alcohol_related_accidents_overtime <- ggplot(count_data, aes(x = Crash.Date.Time, y = Count)) +
-    # geom_line(color = "blue") +
-     #theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-    # labs(title = plot_title, x = "Date", y = "Number of Crashes")
-    
-    ggplotly(alcohol_related_accidents_overtime)
+    # Convert ggplot graph to Plotly
+    ggplotly(substance_graph)
   })
   
-  
-  
+  # selectInput widget that allows user to choose which substance type to display
+  output$substance_selector <- renderUI({
+    # Substance Selector Dropdown
+    selectInput("substance", "Select Substance Type:", choices = substance_types)
+  })
+
   # Chufeng's graph code 
   
   output$injury_plot <- renderPlotly({
