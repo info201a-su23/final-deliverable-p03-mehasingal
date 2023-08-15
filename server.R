@@ -13,12 +13,11 @@ data <- read.csv("maryland_crash_report.csv")
 data <- data %>%
   mutate(Year = year(as.POSIXct(Crash.Date.Time, format = "%m/%d/%Y %I:%M:%S %p")))
 
-# Define server logic
+
 server <- function(input, output) {
   
   # Summary Table Code
   
-  # Calculate the maximum counts for each variable
   max_route_crash <- data %>% 
     group_by(Road.Name, Vehicle.Continuing.Dir) %>%
     summarise(report_num = n()) %>%
@@ -52,7 +51,7 @@ server <- function(input, output) {
     arrange(desc(report_num)) %>%
     head(1)
   
-  # Create a summary table containing the questions and the corresponding non-numeric values with maximum counts
+  # Summary Table code
   summary_table_data <- data.frame(
     Question = c("Road Route", "Weather and Road Surface", "Vehicle Model and Make",
                  "Most Often Collisions during Daylight", "Vehicle Body Type with Most Damage"),
@@ -64,8 +63,7 @@ server <- function(input, output) {
       max_dmg_crash$Vehicle.Body.Type
     )
   )
-  
-  # Render the summary table in the UI
+
   output$summary_table <- renderTable({
     summary_table_data
   })
@@ -78,56 +76,51 @@ server <- function(input, output) {
   })
   
   output$collision_bargraph <- renderPlotly({
-    # Use the filtered_data reactive expression to get the filtered data
+    
     filtered_crashes <- filtered_data()
     
-    # Calculate collision occurrence based on the filtered data
     collision_occurance <- table(filtered_crashes$Collision.Type)
     collision_occurance_df <- as.data.frame(collision_occurance)
     colnames(collision_occurance_df) <- c("Collision Type", "Count")
-    
-    # Get the selected number of top collision types
+  
     selected_num_top <- input$numTop
   
     if (selected_num_top == "All") {
       sorted_collision_occurance_df <- collision_occurance_df
       plot_title <- "All Collision Types"
     } else {
-      # Sort the collision types by count and select the top N
+      # Sorting collision types
       sorted_collision_occurance_df <- collision_occurance_df %>%
         arrange(desc(Count)) %>%
         head(as.numeric(selected_num_top))
       plot_title <- paste("Top", selected_num_top, "Occurrences of Collision Types")
     }
     
-    # Create the collision graph using ggplot2
+    # Creates the bar graph
     collision_graph <- ggplot(sorted_collision_occurance_df, aes(x = reorder(`Collision Type`, Count), y = Count)) +
       geom_bar(stat = "identity", fill = "purple") +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
       labs(title = plot_title, x = "Collision Type", y = "Count")
     
-    # Convert ggplot to Plotly
     ggplotly(collision_graph)
   })
   
   
   # Meha's graph code
     
-  # Define the substance abuse types of interest
+  # Substance abuse types of interest
   substance_types <- c("All", "ALCOHOL PRESENT", "ALCOHOL CONTRIBUTED",
                        "ILLEGAL DRUG CONTRIBUTED", "ILLEGAL DRUG PRESENT",
                        "COMBINATION CONTRIBUTED", "MEDICATION CONTRIBUTED",
                        "COMBINED SUBSTANCE PRESENT")
   
   output$substance_plot <- renderPlotly({
-    # Convert the "Crash.Date.Time" column to a proper datetime format
+    
     data$Crash.Date.Time <- as.POSIXct(data$Crash.Date.Time, format = "%m/%d/%Y %I:%M:%S %p")
     
-    # Filter data based on selected substance type
     selected_substance <- input$substance
     
     if (selected_substance == "All") {
-      # Create a placeholder data frame for "All" option
       substance_data <- data %>%
         mutate(Year = format(Crash.Date.Time, "%Y")) %>%
         group_by(Year) %>%
@@ -136,7 +129,6 @@ server <- function(input, output) {
       
       graph_title <- "Percentage of Collisions for All Substance Types Over Time"
     } else {
-      # Filter data for the selected substance type
       substance_data <- data %>%
         filter(Driver.Substance.Abuse == selected_substance) %>%
         mutate(Year = format(Crash.Date.Time, "%Y")) %>%
@@ -147,7 +139,7 @@ server <- function(input, output) {
       graph_title <- paste("Percentage of Collisions for", selected_substance, "Over Time")
     }
     
-    # Creating the line graph
+    # Creates the line graph
     substance_graph <- ggplot(substance_data, aes(x = Year, y = Percentage)) +
       geom_point(color = "blue") +
       geom_segment(aes(xend = lead(Year), yend = lead(Percentage)),
@@ -157,13 +149,11 @@ server <- function(input, output) {
            y = "Percentage (%)") +
       theme_minimal()
     
-    # Convert ggplot graph to Plotly
     ggplotly(substance_graph)
   })
   
   # selectInput widget that allows user to choose which substance type to display
   output$substance_selector <- renderUI({
-    # Substance Selector Dropdown
     selectInput("substance", "Select Substance Type:", choices = substance_types)
   })
 
@@ -180,7 +170,6 @@ server <- function(input, output) {
     filtered_data <- data %>%
       filter(Vehicle.Make %in% top_makes)
     
-    # Use selectInput widget to allow users to choose Injury Severity
     selected_severity <- input$severity_choice
 
     summary_data <- filtered_data %>%
@@ -198,13 +187,11 @@ server <- function(input, output) {
            y = "Count") +
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
     
-    
-    # Convert ggplot to Plotly
     ggplotly(vehicle_injury_scatterplot)
   })
   
   
-  # Define a selectInput widget for choosing Injury Severity
+  # selectInput widget for choosing Injury Severity
   output$severity_input <- renderUI({
     severity_choices <- unique(data$Injury.Severity)
     selectInput("severity_choice", "Select Injury Severity", severity_choices)
