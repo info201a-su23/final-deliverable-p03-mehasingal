@@ -2,7 +2,9 @@
 ## INFO 201 "Foundational Skills for Data Science" — Summer 2023
 
 Authors: Jessica Wang, Meha Singal, ChuFeng Wang
+Group: AA 4
 
+Link to Shiny App:
 **https://msingal.shinyapps.io/final-deliverable-p03-mehasingal/**
 
 # Introduction
