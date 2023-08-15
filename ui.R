@@ -7,7 +7,6 @@ library(tidyr)
 library(rsconnect)
 library(shinythemes)
 
-
 data <- read.csv("maryland_crash_report.csv")
 
 data <- data %>%
